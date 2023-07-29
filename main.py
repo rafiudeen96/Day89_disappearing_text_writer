@@ -28,7 +28,6 @@ def func_random_prompt_generator():
                                 fg="black",bg="white")
     greeting_kind_label.place(x=100, y=100)
 
-    greeting_kind_label.
 
     # -------------------------------------Function Random prompt------------------------------------------------#
 
