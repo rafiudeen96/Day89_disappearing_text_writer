@@ -2,6 +2,7 @@ import math
 from tkinter import *
 from random import *
 from time import *
+from tkinter import messagebox
 
 beginning_text = ""
 
@@ -72,31 +73,49 @@ def func_random_prompt_generator():
         difficulty_level_label = Label(prompt_generator_window,text="Choose difficulty level to begin",bg="white")
         difficulty_level_label.place(x=100, y=280)
 
-        easy_button = Button(prompt_generator_window,text="Easy",command= lambda :func_dangerous_text_editor(10))
+        easy_button = Button(prompt_generator_window,text="Easy",command=func_easy_mode)
         easy_button.place(x=100,y=320)
 
-        medium_button = Button(prompt_generator_window,text="Medium",command=lambda :func_dangerous_text_editor(7))
+        medium_button = Button(prompt_generator_window,text="Medium",command=func_medium_mode)
         medium_button.place(x=200,y=320)
 
-        hard_button = Button(prompt_generator_window,text="Hard",command=lambda :func_dangerous_text_editor(5))
+        hard_button = Button(prompt_generator_window,text="Hard",command=func_hard_mode)
         hard_button.place(x=300,y=320)
 
-    # def func_easy_mode():
-    #     try:
-    #         with open("easy.txt","r") as easy:
-    #             score=easy.read()
-    #     except FileNotFoundError:
-    #         score=0
-    #
-    #     func_dangerous_text_editor(10)
+    def func_easy_mode():
+        try:
+            with open("easy.txt","r") as easy:
+                score=easy.read()
+        except FileNotFoundError:
+            score=0
 
+        func_dangerous_text_editor(10,"easy",score)
+
+    def func_medium_mode():
+        try:
+            with open("medium.txt","r") as medium:
+                score=medium.read()
+        except FileNotFoundError:
+            score=0
+
+        func_dangerous_text_editor(7,"medium",score)
+
+    def func_hard_mode():
+        try:
+            with open("hard.txt","r") as hard:
+                score=hard.read()
+        except FileNotFoundError:
+            score=0
+
+        func_dangerous_text_editor(5,"hard",score)
 
     # ---------------------------------------------------Function Dangerous Text Editor----------------------------#
-    def func_dangerous_text_editor(minutes):
+    def func_dangerous_text_editor(minutes,mode,score):
         global beginning_text,is_button_pressed
         text_editor_window = Toplevel(prompt_generator_window)
         text_editor_window.title("Dangerous Text Editor")
         text_editor_window.geometry("900x500")
+        score = int(score)
 
         countdown_label = Label(text_editor_window, text="")
 
@@ -109,7 +128,8 @@ def func_random_prompt_generator():
         current_score_label = Label(text_editor_window,text="Current Score : 0")
         current_score_label.place(x=100,y=30)
 
-
+        high_score_label = Label(text_editor_window,text=f"High Score : {score}")
+        high_score_label.place(x=100,y=60)
 
 
         def func_countdown(session_time):
@@ -164,6 +184,7 @@ def func_random_prompt_generator():
 
         def infinite_loop():
             global is_button_pressed,i,after
+            difficulty_level = False
             if is_button_pressed:
                 text_in_the_editor = editor_textbox.get("1.0", "end-1c")
                 length_of_text_in_textbox = len(text_in_the_editor.split(" "))
@@ -174,8 +195,25 @@ def func_random_prompt_generator():
 
                 current_score_label.config(text=f"Current Score: {text_wrote}")
 
-                if i == 0:
-                    text_editor_window.after_cancel(after)
+                if text_wrote > score and mode == "easy":
+                    high_score_label.config(text=f"High Score : {text_wrote}")
+                    with open("easy.txt", "w") as easy:
+                        easy.write(str(text_wrote))
+                    difficulty_level=True
+                elif text_wrote > score and mode == "medium":
+                    high_score_label.config(text=f"High Score : {text_wrote}")
+                    with open("medium.txt", "w") as medium:
+                        medium.write(str(text_wrote))
+                    difficulty_level=True
+                elif text_wrote > score and mode == "hard":
+                    high_score_label.config(text=f"High Score : {text_wrote}")
+                    with open("hard.txt","w") as hard:
+                        hard.write(str(text_wrote))
+                    difficulty_level=True
+                if i == 1:
+                        text_editor_window.after_cancel(after)
+                        if difficulty_level:
+                            messagebox.showinfo("messagebox",f"You've made a new High Score: {text_wrote}")
                 keypress_two = text_editor_window.bind("<KeyPress>",value_of_i)
             after=text_editor_window.after(1,infinite_loop)
 
