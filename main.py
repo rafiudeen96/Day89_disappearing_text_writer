@@ -72,7 +72,7 @@ def func_random_prompt_generator():
         difficulty_level_label = Label(prompt_generator_window,text="Choose difficulty level to begin",bg="white")
         difficulty_level_label.place(x=100, y=280)
 
-        easy_button = Button(prompt_generator_window,text="Easy",command=func_easy_mode)
+        easy_button = Button(prompt_generator_window,text="Easy",command= lambda :func_dangerous_text_editor(10))
         easy_button.place(x=100,y=320)
 
         medium_button = Button(prompt_generator_window,text="Medium",command=lambda :func_dangerous_text_editor(7))
@@ -81,9 +81,18 @@ def func_random_prompt_generator():
         hard_button = Button(prompt_generator_window,text="Hard",command=lambda :func_dangerous_text_editor(5))
         hard_button.place(x=300,y=320)
 
+    # def func_easy_mode():
+    #     try:
+    #         with open("easy.txt","r") as easy:
+    #             score=easy.read()
+    #     except FileNotFoundError:
+    #         score=0
+    #
+    #     func_dangerous_text_editor(10)
+
 
     # ---------------------------------------------------Function Dangerous Text Editor----------------------------#
-    def func_dangerous_text_editor(minutes=None):
+    def func_dangerous_text_editor(minutes):
         global beginning_text,is_button_pressed
         text_editor_window = Toplevel(prompt_generator_window)
         text_editor_window.title("Dangerous Text Editor")
@@ -103,7 +112,7 @@ def func_random_prompt_generator():
 
 
 
-        def func_countdown(session_time=None):
+        def func_countdown(session_time):
             global i,is_button_pressed,difficulty_level_label,easy_button,medium_button,hard_button
             timer_one_sec = 1000
             if i >= 1:
@@ -126,11 +135,10 @@ def func_random_prompt_generator():
                 session_time_label.config(text=f"Session Time : {session_time_in_minutes}:{session_time_in_seconds}")
                 session_time_label.place(x=400, y=5)
 
-                func_infinite_loop(session_time)
+
                 i -= 1
                 text_editor_window.after(timer_one_sec, func_countdown,session_time-1)
-            elif i==0 or session_time==0:
-                score = func_infinite_loop(session_time)
+            else:
                 func_calling_random_text()
                 is_button_pressed = False
                 difficulty_level_label.destroy()
@@ -138,7 +146,6 @@ def func_random_prompt_generator():
                 medium_button.destroy()
                 hard_button.destroy()
                 text_editor_window.destroy()
-                return score
 
 
 
@@ -155,7 +162,7 @@ def func_random_prompt_generator():
 
         keypress_one=text_editor_window.bind("<KeyPress>",func_start_countdown)
 
-        def func_infinite_loop(time=None):
+        def infinite_loop():
             global is_button_pressed,i,after
             if is_button_pressed:
                 text_in_the_editor = editor_textbox.get("1.0", "end-1c")
@@ -167,23 +174,14 @@ def func_random_prompt_generator():
 
                 current_score_label.config(text=f"Current Score: {text_wrote}")
 
-                if i==0 or time==0:
+                if i == 0:
                     text_editor_window.after_cancel(after)
-                    return text_wrote
                 keypress_two = text_editor_window.bind("<KeyPress>",value_of_i)
-            after=text_editor_window.after(1,func_infinite_loop)
+            after=text_editor_window.after(1,infinite_loop)
+
+        infinite_loop()
 
         text_editor_window.mainloop()
-        return func_countdown
-
-    def func_easy_mode():
-        try:
-            with open("easy.txt", "r") as easy:
-                score = easy.read()
-        except FileNotFoundError:
-            score = 0
-
-        current_score = func_dangerous_text_editor(10)
 
     # --------------------------------------------- Open the text Editor ----------------------------------------------#
 
