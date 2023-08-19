@@ -22,6 +22,11 @@ easy_button=None
 medium_button=None
 hard_button=None
 
+is_high_score_attained = False
+
+
+start_countdown = True
+
 def func_random_prompt_generator():
     prompt_generator_window = Tk()
     prompt_generator_window.title("Dangerous Prompt Generator")
@@ -35,9 +40,7 @@ def func_random_prompt_generator():
 
 
     # -------------------------------------Function Random prompt------------------------------------------------#
-
     def func_random_text():
-
         global beginning_text,beginning_text_label
 
         text_list = ["She decided to go to her father's grave, to ask his advice",
@@ -103,15 +106,18 @@ def func_random_prompt_generator():
     def func_hard_mode():
         try:
             with open("hard.txt","r") as hard:
-                score=hard.read()
+                score = hard.read()
+                if score == "":
+                    score = 0
         except FileNotFoundError:
-            score=0
+            score = 0
 
         func_dangerous_text_editor(5,"hard",score)
 
     # ---------------------------------------------------Function Dangerous Text Editor----------------------------#
     def func_dangerous_text_editor(minutes,mode,score):
-        global beginning_text,is_button_pressed
+        global beginning_text,is_button_pressed,start_countdown
+        start_countdown=True
         text_editor_window = Toplevel(prompt_generator_window)
         text_editor_window.title("Dangerous Text Editor")
         text_editor_window.geometry("900x500")
@@ -120,6 +126,9 @@ def func_random_prompt_generator():
         countdown_label = Label(text_editor_window, text="")
 
         session_time_label = Label(text_editor_window,text="")
+
+        testing_current_score_label = Label(text_editor_window,text="")
+        testing_current_score_label.place(x=400,y=30)
 
         editor_textbox = Text(text_editor_window)
         editor_textbox.place(x=100, y=100)
@@ -133,9 +142,10 @@ def func_random_prompt_generator():
 
 
         def func_countdown(session_time):
-            global i,is_button_pressed,difficulty_level_label,easy_button,medium_button,hard_button
+            global i,is_button_pressed,difficulty_level_label,easy_button,medium_button,\
+                hard_button,is_high_score_attained
             timer_one_sec = 1000
-            if i >= 1:
+            if i >= 1 and session_time >= 1:
                 print(session_time)
                 countdown_label.config(text=i)
                 countdown_label.place(x=20, y=5)
@@ -165,33 +175,47 @@ def func_random_prompt_generator():
                 easy_button.destroy()
                 medium_button.destroy()
                 hard_button.destroy()
-                text_editor_window.destroy()
+                if not is_high_score_attained:
+                    text_editor_window.destroy()
 
-
-
-        def value_of_i(event):
-            global i
-            i=5
 
         def func_start_countdown(event):
-            global i,is_button_pressed
+            global i,is_button_pressed,start_countdown
             i = 5
-            text_editor_window.unbind("<KeyPress>", keypress_one)
-            func_countdown(minutes*60)
+            if start_countdown:
+                func_countdown(minutes*60)
+                start_countdown = False
             is_button_pressed=True
 
         keypress_one=text_editor_window.bind("<KeyPress>",func_start_countdown)
 
         def infinite_loop():
-            global is_button_pressed,i,after
+            global is_button_pressed,beginning_text,i,after,is_high_score_attained
+            if type(beginning_text) == str:
+                beginning_text = beginning_text.split(" ")
             difficulty_level = False
             if is_button_pressed:
                 text_in_the_editor = editor_textbox.get("1.0", "end-1c")
+
                 length_of_text_in_textbox = len(text_in_the_editor.split(" "))
 
-                length_of_beginning_text = len(beginning_text.split(" "))
+                length_of_beginning_text = len(beginning_text)
+
+                print(length_of_beginning_text)
 
                 text_wrote = length_of_text_in_textbox - length_of_beginning_text
+
+# -------------- Ensuring score didn't go minus even if the text showing is get deleted and start counting from zero---#
+
+                if text_wrote == -1:
+                    beginning_text.pop()
+                    print(f"length of beginning text : {len(beginning_text)}")
+
+# ------------------------ Ensuring that pressing space didn't get counted as score point-----------------------------#
+
+                for number in range(len(text_in_the_editor)-1,0,-1):
+                    if text_in_the_editor[number] == " " and text_in_the_editor[number-1] == " ":
+                        text_wrote-=1
 
                 current_score_label.config(text=f"Current Score: {text_wrote}")
 
@@ -210,11 +234,15 @@ def func_random_prompt_generator():
                     with open("hard.txt","w") as hard:
                         hard.write(str(text_wrote))
                     difficulty_level=True
-                if i == 1:
-                        text_editor_window.after_cancel(after)
-                        if difficulty_level:
-                            messagebox.showinfo("messagebox",f"You've made a new High Score: {text_wrote}")
-                keypress_two = text_editor_window.bind("<KeyPress>",value_of_i)
+                if i == 0:
+                    sleep(1)
+                    text_editor_window.after_cancel(after)
+                    if difficulty_level:
+                        is_high_score_attained = True
+                        if messagebox.showinfo("messagebox",f"You've made a new High Score: {text_wrote}",parent=text_editor_window):
+                            text_editor_window.destroy()
+
+                # is_button_pressed=False
             after=text_editor_window.after(1,infinite_loop)
 
         infinite_loop()
